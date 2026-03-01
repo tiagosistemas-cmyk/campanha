@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ranking da Campanha ✈️</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --text:#e9ecff;
+      --muted:#9aa6d6;
+      --bar:#2b63ff;
+      --bar2:#19d3ff;
+      --line:rgba(255,255,255,.08);
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+      --h: 56px;
+      --gold1:#ffda6a;
+      --gold2:#ff9f1a;
+    }
+    *{box-sizing:border-box;font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;}
+    body{
+      margin:0; background: radial-gradient(1200px 700px at 20% 10%, #1a2a66 0%, transparent 55%),
+                         radial-gradient(900px 600px at 90% 20%, #0f6aa0 0%, transparent 55%),
+                         var(--bg);
+      color:var(--text); min-height:100vh;
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .app{width:min(1100px, 100%);}
+    .top{
+      display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      margin-bottom:16px;
+    }
+    .title{display:flex; flex-direction:column; gap:6px;}
+    h1{margin:0; font-size:22px; letter-spacing:.2px;}
+    .sub{color:var(--muted); font-size:13px;}
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+    }
+    .btn, .file, .select{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      transition: transform .08s ease, background .2s ease;
+      font-size:14px;
+    }
+    .btn:hover,.select:hover{background: rgba(255,255,255,.09);}
+    .btn:active{transform: translateY(1px);}
+    .file{padding:8px 10px;}
+    .select{cursor:pointer; padding:10px 12px;}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr;}
+    }
+    .hint{
+      margin-top:10px; color:var(--muted); font-size:12px; line-height:1.35;
+    }
+
+    /* Ranking */
+    .row{
+      position:relative;
+      padding:10px 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      overflow:hidden;
+      margin-bottom:12px;
+    }
+    .row:last-child{margin-bottom:0;}
+    .rowhead{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .left{
+      display:flex; align-items:center; gap:10px;
+      min-width: 0;
+    }
+    .pos{
+      width:28px; height:28px; border-radius:10px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      font-weight:700;
+      flex: 0 0 auto;
+    }
+
+    /* Medalha Top 1 */
+    .medal{
+      width:28px; height:28px; border-radius:10px;
+      display:grid; place-items:center;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(255,255,255,0) 55%),
+                  linear-gradient(135deg, rgba(255,218,106,.35), rgba(255,159,26,.15));
+      border:1px solid rgba(255,218,106,.35);
+      box-shadow: 0 10px 28px rgba(255,189,61,.18), inset 0 0 0 1px rgba(255,255,255,.12);
+      position:relative;
+      overflow:hidden;
+      flex: 0 0 auto;
+      animation: medal-pop 900ms cubic-bezier(.2, .9, .2, 1) both, medal-glow 1.6s ease-in-out infinite;
+    }
+    .medal::after{
+      content:"";
+      position:absolute;
+      inset:-20px;
+      background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.28) 48%, transparent 61%);
+      transform: translateX(-60%) rotate(12deg);
+      animation: medal-shine 1.8s ease-in-out infinite;
+    }
+    @keyframes medal-pop{
+      0%{transform: scale(.6) rotate(-8deg); filter: blur(.2px);}
+      70%{transform: scale(1.12) rotate(4deg);}
+      100%{transform: scale(1) rotate(0deg);}
+    }
+    @keyframes medal-glow{
+      0%,100%{box-shadow: 0 10px 28px rgba(255,189,61,.18), inset 0 0 0 1px rgba(255,255,255,.12);}
+      50%{box-shadow: 0 14px 38px rgba(255,189,61,.30), inset 0 0 0 1px rgba(255,255,255,.18);}
+    }
+    @keyframes medal-shine{
+      0%{transform: translateX(-70%) rotate(12deg); opacity: .0;}
+      20%{opacity:.65;}
+      50%{transform: translateX(60%) rotate(12deg); opacity: .0;}
+      100%{transform: translateX(60%) rotate(12deg); opacity: 0;}
+    }
+    .medal svg{width:18px;height:18px;filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));}
+
+    .team{
+      font-weight:700;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width: 420px;
+    }
+    .val{color: #d9e2ff; font-weight:700;}
+    .barwrap{
+      position:relative;
+      height: var(--h);
+      border-radius: 16px;
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      overflow:hidden;
+    }
+    .barfill{
+      position:absolute; inset:0 auto 0 0;
+      width:0%;
+      border-radius: 16px;
+      background: linear-gradient(90deg, var(--bar), var(--bar2));
+    }
+    .barfill.pos-1{ background: linear-gradient(90deg,#ffda6a,#ff9f1a); }
+    .barfill.pos-2{ background: linear-gradient(90deg,#c0c0c0,#8e8e8e); }
+    .barfill.pos-3{ background: linear-gradient(90deg,#cd7f32,#a65e1f); }
+
+      filter: saturate(1.1);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .barlabel{
+      position:absolute; inset:0;
+      display:flex; align-items:center;
+      padding:0 14px;
+      color: rgba(255,255,255,.9);
+      font-weight:700;
+      text-shadow: 0 2px 8px rgba(0,0,0,.35);
+      mix-blend-mode: screen;
+      pointer-events:none;
+    }
+
+    /* Avião */
+    .plane{
+      width:40px;height:40px;
+    }
+    .plane.small{
+      width:26px;height:26px;
+      opacity:.9;
+    }
+
+      position:absolute;
+      top: 50%;
+      transform: translate(50%, -50%);
+      width: 40px; height: 40px;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.35));
+      pointer-events:none;
+      opacity: 0;
+      transition: opacity .3s ease;
+    }
+    .plane svg{width:100%;height:100%;}
+    .pulse{animation: pulse 1.4s ease-in-out infinite;}
+    @keyframes pulse{
+      0%,100%{transform: translate(-50%, -50%) scale(1);}
+      50%{transform: translate(-50%, -50%) scale(1.06);}
+    }
+
+    .sectionTitle{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      margin:0 0 10px 0;
+    }
+    .sectionTitle h2{
+      margin:0;
+      font-size:14px;
+      color:#cfe6ff;
+      letter-spacing:.2px;
+    }
+    .badge{
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: #cfe6ff;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .cupomRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      margin-bottom:10px;
+    }
+    .cupomLeft{display:flex; gap:10px; align-items:center; min-width:0;}
+    .cupomName{
+      font-weight:800;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width: 320px;
+    }
+    .cupomCount{
+      font-weight:900;
+      font-size:14px;
+      padding:6px 10px;
+      border-radius: 999px;
+      background: rgba(25,211,255,.10);
+      border:1px solid rgba(25,211,255,.20);
+    }
+    .footer{
+      margin-top:14px;
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      color:var(--muted); font-size:12px;
+    }
+    .small{opacity:.9}
+
+    .danger {
+      border-color: rgba(255,120,120,.25) !important;
+      background: rgba(255,120,120,.10) !important;
+      color: #ffd7d7 !important;
+    }
+  
+    .meta-banner{
+      width:100%;
+      text-align:center;
+      font-size:22px;
+      font-weight:900;
+      padding:14px;
+      border-radius:16px;
+      margin-bottom:12px;
+      letter-spacing:.5px;
+      background: linear-gradient(90deg,#1e3c72,#2a5298);
+      border:1px solid rgba(255,255,255,.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,.3);
+      animation: fadeIn 0.6s ease;
+    }
+    .meta-ok{
+      background: linear-gradient(90deg,#11998e,#38ef7d);
+      color:#052f1c;
+    }
+    .meta-bad{
+      background: linear-gradient(90deg,#8e0e00,#ff4b2b);
+      color:white;
+    }
+    @keyframes fadeIn{
+      from{opacity:0; transform:translateY(-8px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+
+    /* Modal Histórico */
+    .modal-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+    .modal{
+      width: min(900px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      box-shadow: 0 30px 90px rgba(0,0,0,.55);
+      overflow: hidden;
+      animation: fadeIn 0.35s ease;
+    }
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 14px 14px 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .modal-title{font-weight: 900; font-size: 16px; letter-spacing:.2px;}
+    .modal-sub{color: var(--muted); font-size: 12px; margin-top: 4px;}
+    .modal-close{padding: 8px 12px; border-radius: 12px;}
+    .modal-body{padding: 12px 14px 14px 14px; max-height: 70vh; overflow:auto;}
+
+    .hist-table{
+      width: 100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    .hist-table th, .hist-table td{
+      text-align:left;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 13px;
+    }
+    .hist-table th{
+      color:#cfe6ff;
+      font-weight: 800;
+      background: rgba(255,255,255,.05);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .hist-table tr:hover td{ background: rgba(255,255,255,.03); }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      white-space: nowrap;
+    }
+    .status-ok{
+      background: rgba(56,239,125,.15);
+      border-color: rgba(56,239,125,.25);
+      color: #bfffe0;
+    }
+    .status-bad{
+      background: rgba(255,75,43,.12);
+      border-color: rgba(255,75,43,.22);
+      color: #ffd1c9;
+    }
+
+    /* Sorteio */
+    .draw-wrap{display:flex;flex-direction:column;gap:14px;align-items:center;}
+    .slot{
+      width:min(520px,100%);
+      height:90px;
+      border-radius:18px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 20px 50px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .slot-mask{
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(11,16,32,.95), rgba(11,16,32,0) 40%, rgba(11,16,32,0) 60%, rgba(11,16,32,.95));
+      pointer-events:none;
+    }
+    .slot-name{
+      font-size:30px;
+      font-weight:1000;
+      letter-spacing:.4px;
+      text-align:center;
+      padding:0 18px;
+      text-shadow: 0 10px 30px rgba(0,0,0,.5);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+    .winner{
+      width:min(520px,100%);
+      border-radius:18px;
+      padding:14px 16px;
+      background: radial-gradient(circle at 20% 20%, rgba(255,255,255,.20), rgba(255,255,255,0) 55%),
+                  linear-gradient(135deg, rgba(255,218,106,.28), rgba(255,159,26,.14));
+      border:1px solid rgba(255,218,106,.35);
+      box-shadow: 0 18px 60px rgba(255,189,61,.18);
+      animation: medal-pop 900ms cubic-bezier(.2, .9, .2, 1) both, medal-glow 1.6s ease-in-out infinite;
+      text-align:center;
+    }
+    .winner-title{font-weight:900;opacity:.95;letter-spacing:.2px;}
+    .winner-name{font-size:34px;font-weight:1100;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .winner-sub{margin-top:6px;color:#f3f6ff;opacity:.9;font-size:13px;}
+    .draw-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+    .draw-note{color:var(--muted);font-size:12px;text-align:center;max-width:520px;line-height:1.35;}
+
+    .confetti{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:0;
+      opacity:0;
+      transition: opacity .25s ease;
+    }
+    .draw-wrap{position:relative;}
+    .slot, .winner, .draw-actions, .draw-note{position:relative; z-index:1;}
+    .winner.shake{
+      animation: winner-shake 650ms ease-in-out 1;
+    }
+    @keyframes winner-shake{
+      0%{transform: translateY(0) scale(1);}
+      20%{transform: translateY(-3px) scale(1.02);}
+      40%{transform: translateY(2px) scale(1.01);}
+      60%{transform: translateY(-2px) scale(1.02);}
+      80%{transform: translateY(1px) scale(1.01);}
+      100%{transform: translateY(0) scale(1);}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+
+      <div id="metaBanner" class="meta-banner">
+        TOTAL GERAL: R$ 0,00
+      </div>
+
+      <div class="title">
+        <h1>Ranking da Campanha ✈️</h1>
+        <div class="sub" style="display:none"></div>
+      </div>
+
+      <div class="controls">
+        <select class="select" id="campaignDate" disabled>
+          <option>Selecione a data…</option>
+        </select>
+        <input class="select" id="csvUrl" placeholder="Cole aqui a URL CSV do Google Sheets" style="min-width:360px" />
+        <button class="btn" id="btnLoadNet">🌐 Atualizar da internet</button>
+        <input class="file" id="file" type="file" accept=".xlsx,.xls,.csv" />
+        <button class="btn" id="btnAnim" disabled>Reanimar</button>
+        <button class="btn" id="btnHistory" disabled>Ver resultados até hoje</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
+        <!-- LEFT: Ranking Equipes -->
+        <div>
+          <div class="sectionTitle">
+            <h2>🏆 Ranking por Equipe</h2>
+            <div class="badge" id="badgeTeam">Aguardando dados…</div>
+          </div>
+          <div id="listTeams"></div>
+        </div>
+
+        <!-- RIGHT: Ranking Cupons -->
+        <div>
+          <div class="sectionTitle">
+            <h2>🎟️ Ranking de Cupons por Proprietário</h2>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
+  <div class="badge" id="badgeCupom">Aguardando dados…</div>
+  <button class="btn" id="btnDraw" disabled>🎲 Fazer sorteio</button>
+</div>
+          </div>
+          <div id="listCupons"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="badge" id="badgeStatus">Faça upload do Excel para começar.</div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- SheetJS (versão estável) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    // ===== Config de colunas (0-based): A=0, C=2, D=3, H=7
+    const IDX_EMISSAO = 0;     // Coluna A
+    const IDX_PROPRIETARIO = 2;// Coluna C
+    const IDX_EQUIPE = 3;      // Coluna D
+    const IDX_TOTAL_FINAL = 7; // Coluna H
+
+    const ANIM_MS = 1400;
+
+    let RAW_ROWS = [];     // linhas (sem cabeçalho), como array de arrays
+    let ALL_DATES = [];    // datas únicas (YYYY-MM-DD)
+    let lastTeams = [];
+
+    // ===== Utils =====
+    function parseBRL(v){
+      if (v == null) return 0;
+      if (typeof v === "number") return isFinite(v) ? v : 0;
+
+      let s = String(v).trim();
+      if (!s) return 0;
+
+      s = s.replace(/[^\d,.-]/g, "");
+      if (s.includes(",")){
+        s = s.replace(/\./g, "");
+        s = s.replace(",", ".");
+      }
+      const n = Number(s);
+      return isFinite(n) ? n : 0;
+    }
+
+    function formatBRL(n){
+      try{
+        return n.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+      }catch{
+        return "R$ " + (Math.round(n*100)/100).toFixed(2);
+      }
+    }
+
+    function pad2(x){ return String(x).padStart(2,"0"); }
+
+    // Converte Excel Date / JS Date / texto em YYYY-MM-DD
+    function toYMD(value){
+      if (value == null || value === "") return "";
+
+      if (value instanceof Date && !isNaN(value.getTime())){
+        return `${value.getFullYear()}-${pad2(value.getMonth()+1)}-${pad2(value.getDate())}`;
+      }
+
+      if (typeof value === "number" && isFinite(value)){
+        const dc = XLSX.SSF.parse_date_code(value);
+        if (dc && dc.y && dc.m && dc.d){
+          return `${dc.y}-${pad2(dc.m)}-${pad2(dc.d)}`;
+        }
+      }
+
+      const s = String(value).trim();
+      const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m1) return `${m1[1]}-${m1[2]}-${m1[3]}`;
+
+      const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
+
+      return "";
+    }
+
+    function medalSVG(){
+      return `
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 3h10l-1.2 6H8.2L7 3Z" fill="url(#g1)"/>
+          <path d="M8.2 9h7.6l.6 2.3c.3 1.2-.1 2.5-1.1 3.2l-2 1.4c-.8.6-1.9.6-2.7 0l-2-1.4c-1-.7-1.4-2-1.1-3.2L8.2 9Z" fill="url(#g2)"/>
+          <path d="M9.2 18.2a4 4 0 1 0 5.6 0l-2.8 2-2.8-2Z" fill="url(#g2)"/>
+          <defs>
+            <linearGradient id="g1" x1="7" y1="3" x2="17" y2="9" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFE7A3"/><stop offset="1" stop-color="#FF9F1A"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="7" y1="9" x2="17" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFE7A3"/><stop offset="1" stop-color="#FF9F1A"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      `;
+    }
+
+    function planeSVG(){
+      return `
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M57 30c1.7 0 3 1.3 3 3s-1.3 3-3 3H41l-9 20-5-2 5-18H20l-4 7-4-1 2-9-2-9 4-1 4 7h12l-5-18 5-2 9 20H57Z"
+                fill="white" opacity="0.95"/>
+          <path d="M41 30h16c1.7 0 3 1.3 3 3s-1.3 3-3 3H41"
+                stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+        </svg>
+      `;
+    }
+
+    
+    // ===== Leitura CSV (Google Sheets publicado) =====
+    function parseCSV(text){
+      const rows = [];
+      let row = [];
+      let cur = "";
+      let i = 0;
+      let inQuotes = false;
+
+      while (i < text.length){
+        const c = text[i];
+
+        if (inQuotes){
+          if (c === '"'){
+            const next = text[i+1];
+            if (next === '"'){ cur += '"'; i += 2; continue; }
+            inQuotes = false; i += 1; continue;
+          }
+          cur += c; i += 1; continue;
+        }else{
+          if (c === '"'){ inQuotes = true; i += 1; continue; }
+          if (c === ','){ row.push(cur); cur = ""; i += 1; continue; }
+          if (c === '\r'){ i += 1; continue; }
+          if (c === '\n'){ row.push(cur); rows.push(row); row = []; cur = ""; i += 1; continue; }
+          cur += c; i += 1;
+        }
+      }
+      if (cur.length || row.length){ row.push(cur); rows.push(row); }
+      while (rows.length && rows[rows.length-1].every(x => String(x||"").trim()==="")) rows.pop();
+      return rows;
+    }
+
+    async function loadFromCSV(url){
+      if (!url) throw new Error("URL vazia");
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("Falha ao baixar CSV (" + res.status + ")");
+      const text = await res.text();
+      return parseCSV(text);
+    }
+
+    function normalizeGoogleSheetsUrl(input){
+      let url = (input || "").trim();
+      if (!url) return "";
+      if (url.includes("docs.google.com/spreadsheets") && url.includes("/edit")){
+        const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        const gid = (url.match(/gid=(\d+)/) || [])[1];
+        if (m){
+          const id = m[1];
+          if (gid) return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+          return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
+        }
+      }
+      return url;
+    }
+
+    // ===== Leitura Excel (AOA) =====
+    async function readExcelAsAOA(file){
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, {type:"array", cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      return aoa;
+    }
+
+    function looksLikeHeaderRow(row){
+      const text = (row || []).join(" ").toString().toLowerCase();
+      return text.includes("emiss") || text.includes("equipe") || text.includes("propriet") || text.includes("total");
+    }
+
+    function extractRows(aoa){
+      if (!aoa || !aoa.length) return [];
+      const start = looksLikeHeaderRow(aoa[0]) ? 1 : 0;
+      const rows = [];
+      for (let i = start; i < aoa.length; i++){
+        const r = aoa[i] || [];
+        const ymd = toYMD(r[IDX_EMISSAO]);
+        const equipe = (r[IDX_EQUIPE] ?? "").toString().trim();
+        if (!ymd || !equipe) continue;
+        rows.push(r);
+      }
+      return rows;
+    }
+
+    function buildDates(rows){
+      const set = new Set();
+      for (const r of rows){
+        const ymd = toYMD(r[IDX_EMISSAO]);
+        if (ymd) set.add(ymd);
+      }
+      return Array.from(set).sort((a,b) => b.localeCompare(a));
+    }
+
+    // ===== Regras da campanha =====
+    function getDefaultDate(availableDates){
+      if (!availableDates.length) return "";
+      const now = new Date();
+      const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      const ymdYesterday = `${yesterday.getFullYear()}-${pad2(yesterday.getMonth()+1)}-${pad2(yesterday.getDate())}`;
+      if (availableDates.includes(ymdYesterday)) return ymdYesterday;
+      return availableDates[0];
+    }
+
+    function computeTeamRanking(rows, selectedYMD){
+      const map = new Map();
+      for (const r of rows){
+        const ymd = toYMD(r[IDX_EMISSAO]);
+        if (ymd !== selectedYMD) continue;
+
+        const equipe = (r[IDX_EQUIPE] ?? "").toString().trim();
+        const total = parseBRL(r[IDX_TOTAL_FINAL]);
+        if (!equipe) continue;
+
+        map.set(equipe, (map.get(equipe) ?? 0) + total);
+      }
+      const arr = Array.from(map.entries()).map(([equipe,total]) => ({equipe,total}));
+      arr.sort((a,b) => b.total - a.total);
+      return arr;
+    }
+
+    function computeCupomRanking(rows, selectedYMD){
+      const map = new Map();
+      for (const r of rows){
+        const ymd = toYMD(r[IDX_EMISSAO]);
+        if (ymd !== selectedYMD) continue;
+
+        const prop = (r[IDX_PROPRIETARIO] ?? "").toString().trim();
+        if (!prop) continue;
+
+        map.set(prop, (map.get(prop) ?? 0) + 1);
+      }
+      const arr = Array.from(map.entries()).map(([nome,cupons]) => ({nome,cupons}));
+      arr.sort((a,b) => b.cupons - a.cupons);
+      return arr;
+    }
+
+    
+    function updateMetaBanner(teams){
+      const banner = document.getElementById("metaBanner");
+      const total = teams.reduce((sum,t)=> sum + t.total, 0);
+      const formatted = formatBRL(total);
+
+      banner.classList.remove("meta-ok","meta-bad");
+
+      if(total >= 20000){
+        banner.classList.add("meta-ok");
+        banner.innerHTML = `TOTAL GERAL: ${formatted} 🏆 BATEU A META HOJE!`;
+      }else{
+        banner.classList.add("meta-bad");
+        banner.innerHTML = `TOTAL GERAL: ${formatted} ❌ NÃO BATEU A META`;
+      }
+    }
+
+
+    function computeDailyTotals(rows){
+      const map = new Map(); // ymd -> total
+      for (const r of rows){
+        const ymd = toYMD(r[IDX_EMISSAO]);
+        if (!ymd) continue;
+        const v = parseBRL(r[IDX_TOTAL_FINAL]);
+        map.set(ymd, (map.get(ymd) ?? 0) + v);
+      }
+      const arr = Array.from(map.entries()).map(([ymd,total]) => ({
+        ymd,
+        total,
+        bateu: total >= 20000
+      }));
+      // do primeiro dia até o último (asc)
+      arr.sort((a,b) => a.ymd.localeCompare(b.ymd));
+      return arr;
+    }
+
+    
+    
+    // ===== Som + Confete =====
+    // Áudio via WebAudio (não precisa arquivos). Obs: navegador pode exigir 1º clique do usuário (já temos).
+    let _audioCtx = null;
+    function audioCtx(){
+      if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return _audioCtx;
+    }
+    function beep(freq, durationMs, type="sine", gain=0.06){
+      const ctx = audioCtx();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.value = gain;
+      o.connect(g); g.connect(ctx.destination);
+      const t0 = ctx.currentTime;
+      o.start(t0);
+      g.gain.setValueAtTime(gain, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + durationMs/1000);
+      o.stop(t0 + durationMs/1000);
+    }
+    function rouletteTick(){
+      beep(720, 40, "square", 0.035);
+    }
+    function winSound(){
+      beep(523.25, 140, "triangle", 0.07);
+      setTimeout(()=>beep(659.25, 140, "triangle", 0.07), 150);
+      setTimeout(()=>beep(783.99, 240, "triangle", 0.08), 300);
+    }
+
+    // Confete (canvas) - leve e sem libs
+    let _confettiRAF = null;
+    function launchConfetti(){
+      const canvas = document.getElementById("confettiCanvas");
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(600, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(400, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      canvas.style.opacity = "1";
+
+      const W = rect.width, H = rect.height;
+      const pieces = [];
+      const colors = ["#ffda6a","#ff9f1a","#19d3ff","#2b63ff","#38ef7d","#ffffff","#c0c0c0","#cd7f32"];
+      const N = 120;
+
+      for (let i=0;i<N;i++){
+        pieces.push({
+          x: Math.random()*W,
+          y: -20 - Math.random()*H*0.2,
+          vx: (Math.random()-0.5)*2.2,
+          vy: 2.2 + Math.random()*3.2,
+          r: 3 + Math.random()*4,
+          a: Math.random()*Math.PI*2,
+          va: (Math.random()-0.5)*0.25,
+          color: colors[(Math.random()*colors.length)|0],
+          life: 0
+        });
+      }
+
+      const tStart = performance.now();
+      const DURATION = 2200;
+
+      function frame(now){
+        const t = now - tStart;
+        ctx.clearRect(0,0,W,H);
+        for (const p of pieces){
+          p.life += 1;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.a += p.va;
+          p.vy += 0.02;
+          p.x += Math.sin((p.life/12)) * 0.4;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.a);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.r, -p.r*0.6, p.r*2, p.r*1.2);
+          ctx.restore();
+        }
+
+        if (t < DURATION){
+          _confettiRAF = requestAnimationFrame(frame);
+        }else{
+          canvas.style.opacity = "0";
+          if (_confettiRAF) cancelAnimationFrame(_confettiRAF);
+          _confettiRAF = null;
+        }
+      }
+      if (_confettiRAF) cancelAnimationFrame(_confettiRAF);
+      _confettiRAF = requestAnimationFrame(frame);
+    }
+
+    // ===== Sorteio (ponderado por cupons) =====
+    let CURRENT_DATE_YMD = ""; // atualizado no refreshForDate
+
+    function weightedPick(items){
+      // items: [{nome, cupons}]
+      const total = items.reduce((s,it)=> s + (it.cupons||0), 0);
+      if (total <= 0) return null;
+      let r = Math.random() * total;
+      for (const it of items){
+        r -= (it.cupons||0);
+        if (r < 0) return it;
+      }
+      return items[items.length - 1] || null;
+    }
+
+    function openDraw(){
+      const backdrop = document.getElementById("drawBackdrop");
+      const slotName = document.getElementById("slotName");
+      const winnerBox = document.getElementById("winnerBox");
+      const btnAgain = document.getElementById("btnAgainDraw");
+      const btnStart = document.getElementById("btnStartDraw");
+
+      slotName.textContent = "—";
+      winnerBox.style.display = "none";
+      btnAgain.style.display = "none";
+      btnStart.style.display = "inline-flex";
+
+      backdrop.style.display = "flex";
+      backdrop.setAttribute("aria-hidden","false");
+    }
+
+    function closeDraw(){
+      const backdrop = document.getElementById("drawBackdrop");
+      const canvas = document.getElementById("confettiCanvas");
+      if (canvas) canvas.style.opacity = "0";
+      backdrop.style.display = "none";
+      backdrop.setAttribute("aria-hidden","true");
+    }
+
+    async function runDraw(){
+      const slotName = document.getElementById("slotName");
+      const winnerBox = document.getElementById("winnerBox");
+      const winnerName = document.getElementById("winnerName");
+      const winnerSub = document.getElementById("winnerSub");
+      const btnAgain = document.getElementById("btnAgainDraw");
+      const btnStart = document.getElementById("btnStartDraw");
+
+      const cupons = computeCupomRanking(RAW_ROWS, CURRENT_DATE_YMD); // já ordenado desc
+      if (!cupons.length){
+        slotName.textContent = "Sem cupons nesta data";
+        return;
+      }
+
+      // garante probabilidade proporcional
+      const winner = weightedPick(cupons);
+      if (!winner) return;
+
+      // animação: roleta com desaceleração
+      btnStart.disabled = true;
+      btnAgain.disabled = true;
+
+      winnerBox.style.display = "none";
+      btnAgain.style.display = "none";
+
+      // cria uma lista para "passar" na tela
+      // (não é a probabilidade, é só visual)
+      const visual = cupons
+        .slice(0, 30) // top 30 pra ficar bonito/leve
+        .flatMap(it => Array(Math.min(it.cupons, 6)).fill(it.nome)); // repete mais quem tem mais cupons (visual)
+      const uniqueFallback = cupons.map(it => it.nome);
+
+      const spinList = (visual.length ? visual : uniqueFallback);
+
+      let idx = 0;
+      let delay = 40;     // começa rápido
+      const maxDelay = 220;
+      const steps = 42 + Math.floor(Math.random() * 16); // 42-57 trocas
+      let count = 0;
+
+      function tick(){
+        // mostra nomes "girando"
+        try{ rouletteTick(); }catch(e){}
+        slotName.textContent = spinList[idx % spinList.length];
+        idx++;
+        count++;
+
+        // desacelera aos poucos
+        const t = count / steps;
+        delay = Math.min(maxDelay, 40 + Math.pow(t, 2.2) * 220);
+
+        if (count < steps){
+          setTimeout(tick, delay);
+        }else{
+          // trava no vencedor
+          slotName.textContent = winner.nome;
+          winnerName.textContent = winner.nome;
+          winnerSub.textContent = `Cupons no dia: ${winner.cupons} • Data: ${CURRENT_DATE_YMD.split("-").reverse().join("/")}`;
+          winnerBox.style.display = "block";
+          try{ winSound(); }catch(e){}
+          try{ launchConfetti(); }catch(e){}
+          try{ winnerBox.classList.remove("shake"); void winnerBox.offsetWidth; winnerBox.classList.add("shake"); }catch(e){}
+          btnAgain.style.display = "inline-flex";
+          btnStart.style.display = "none";
+          btnStart.disabled = false;
+          btnAgain.disabled = false;
+        }
+      }
+      tick();
+    }
+
+    function openHistory(){
+      const backdrop = document.getElementById("historyBackdrop");
+      const btnDraw = document.getElementById("btnDraw");
+      const btnCloseDraw = document.getElementById("btnCloseDraw");
+      const drawBackdrop = document.getElementById("drawBackdrop");
+      const btnStartDraw = document.getElementById("btnStartDraw");
+      const btnAgainDraw = document.getElementById("btnAgainDraw");
+      const csvUrlInput = document.getElementById("csvUrl");
+      const btnLoadNet = document.getElementById("btnLoadNet");
+      const tbody = document.getElementById("historyTbody");
+      const sub = document.getElementById("historySub");
+
+      const hist = computeDailyTotals(RAW_ROWS);
+      sub.textContent = `${hist.length} dias • Meta: R$ 20.000,00`;
+      tbody.innerHTML = "";
+
+      for (const d of hist){
+        const tr = document.createElement("tr");
+        const dateBR = d.ymd.split("-").reverse().join("/");
+        const status = d.bateu
+          ? `<span class="status-pill status-ok">🏆 BATEU A META</span>`
+          : `<span class="status-pill status-bad">❌ NÃO BATEU</span>`;
+        tr.innerHTML = `
+          <td>${dateBR}</td>
+          <td><b>${formatBRL(d.total)}</b></td>
+          <td>${status}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      backdrop.style.display = "flex";
+      backdrop.setAttribute("aria-hidden","false");
+    }
+
+    function closeHistory(){
+      const backdrop = document.getElementById("historyBackdrop");
+      backdrop.style.display = "none";
+      backdrop.setAttribute("aria-hidden","true");
+    }
+
+    // ===== Render UI =====
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    function renderTeams(data){
+      lastTeams = data;
+      const container = document.getElementById("listTeams");
+      container.innerHTML = "";
+
+      if (!data.length){
+        document.getElementById("badgeTeam").textContent = "Sem dados para esta data.";
+        return;
+      }
+
+      const max = Math.max(...data.map(d => d.total), 1);
+      document.getElementById("badgeTeam").textContent =
+        `Líder: ${data[0].equipe} • ${formatBRL(data[0].total)}`;
+
+      data.forEach((d, i) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const rankIcon = (i === 0)
+          ? `<div class="medal" title="Top 1">${medalSVG()}</div>`
+          : `<div class="pos">${i+1}</div>`;
+
+        row.innerHTML = `
+          <div class="rowhead">
+            <div class="left">
+              ${rankIcon}
+              <div class="team" title="${escapeHtml(d.equipe)}">${escapeHtml(d.equipe)}</div>
+            </div>
+            <div class="val">${formatBRL(d.total)}</div>
+          </div>
+          <div class="barwrap">
+            <div class="barfill pos-${i+1}" data-target="${(d.total/max)*100}"></div>
+            <div class="barlabel">${Math.round((d.total/max)*100)}%</div>
+            <div class="plane ${i === 0 ? "pulse" : "small"}" id="plane-${i}">${planeSVG()}</div>
+          </div>
+        `;
+
+        container.appendChild(row);
+      });
+
+      animateBars();
+    }
+
+    function renderCupons(data){
+      const container = document.getElementById("listCupons");
+      container.innerHTML = "";
+
+      if (!data.length){
+        document.getElementById("badgeCupom").textContent = "Sem cupons para esta data.";
+        return;
+      }
+
+      document.getElementById("badgeCupom").textContent =
+        `Top: ${data[0].nome} • ${data[0].cupons} cupons`;
+
+      data.slice(0,10).forEach((d, i) => {
+        const div = document.createElement("div");
+        div.className = "cupomRow";
+        div.innerHTML = `
+          <div class="cupomLeft">
+            <div class="pos">${i+1}</div>
+            <div class="cupomName" title="${escapeHtml(d.nome)}">CUPONS ${escapeHtml(d.nome)}</div>
+          </div>
+          <div class="cupomCount">${d.cupons}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function animateBars(){
+      const fills = Array.from(document.querySelectorAll(".barfill"));
+      const planes = Array.from(document.querySelectorAll(".plane"));
+
+      fills.forEach(f => f.style.width = "0%");
+      planes.forEach(p => {
+        p.style.opacity = "0";
+        p.style.right = "100%";
+      });
+
+      const start = performance.now();
+      function tick(now){
+        const t = Math.min((now - start) / ANIM_MS, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+
+        fills.forEach((f, idx) => {
+          const target = Number(f.dataset.target || "0");
+          const w = target * ease;
+          f.style.width = w.toFixed(2) + "%";
+
+          const plane = document.getElementById("plane-" + idx);
+          if (plane){
+            plane.style.opacity = "1";
+            const left = Math.max(2, Math.min(w, 98));
+            plane.style.right = (100 - left).toFixed(2) + "%";
+          }
+        });
+
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // ===== Filtro por data =====
+    function fillDateSelect(dates, defaultYMD){
+      const sel = document.getElementById("campaignDate");
+      sel.innerHTML = "";
+      for (const ymd of dates){
+        const opt = document.createElement("option");
+        opt.value = ymd;
+        opt.textContent = ymd.split("-").reverse().join("/");
+        sel.appendChild(opt);
+      }
+      sel.value = defaultYMD;
+      sel.disabled = false;
+    }
+
+    function setStatus(text, danger=false){
+      const el = document.getElementById("badgeStatus");
+      el.textContent = text;
+      el.classList.toggle("danger", !!danger);
+    }
+
+    function refreshForDate(ymd){
+      CURRENT_DATE_YMD = ymd;
+      const teams = computeTeamRanking(RAW_ROWS, ymd);
+      const cupons = computeCupomRanking(RAW_ROWS, ymd);
+
+      renderTeams(teams);
+      updateMetaBanner(teams);
+      renderCupons(cupons);
+
+      const btnDraw = document.getElementById('btnDraw');
+      if (btnDraw) btnDraw.disabled = !(cupons && cupons.length);
+
+      setStatus(`Campanha: ${ymd.split("-").reverse().join("/")} • ${teams.length} equipes • ${cupons.length} proprietários`, false);
+      document.getElementById("btnAnim").disabled = !teams.length;
+      document.getElementById("btnHistory").disabled = !RAW_ROWS.length;
+    }
+
+    // ===== Eventos =====
+    document.getElementById("file").addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try{
+        if (typeof XLSX === "undefined"){
+          setStatus("A biblioteca XLSX não carregou (verifique internet/bloqueio).", true);
+          return;
+        }
+
+        const aoa = await readExcelAsAOA(file);
+        RAW_ROWS = extractRows(aoa);
+        ALL_DATES = buildDates(RAW_ROWS);
+
+        if (!RAW_ROWS.length || !ALL_DATES.length){
+          setStatus("Não encontrei linhas válidas (confira colunas A/C/D/H).", true);
+          return;
+        }
+
+        const def = getDefaultDate(ALL_DATES);
+        fillDateSelect(ALL_DATES, def);
+        refreshForDate(def);
+
+      }catch(err){
+        console.error(err);
+        const msg = (typeof XLSX === "undefined")
+          ? "A biblioteca XLSX não carregou. Verifique internet ou bloqueio do CDN."
+          : ("Erro ao ler o arquivo: " + (err?.message || err));
+        setStatus(msg, true);
+      }
+    });
+
+    document.getElementById("campaignDate").addEventListener("change", (e) => {
+      const ymd = e.target.value;
+      if (!ymd) return;
+      refreshForDate(ymd);
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const btnAnim = document.getElementById("btnAnim");
+      const btnHistory = document.getElementById("btnHistory");
+      const btnClose = document.getElementById("btnCloseHistory");
+      const backdrop = document.getElementById("historyBackdrop");
+
+      btnAnim?.addEventListener("click", () => {
+        if (lastTeams.length) animateBars();
+      });
+
+      btnHistory?.addEventListener("click", () => {
+        if (RAW_ROWS.length) openHistory();
+      });
+
+      btnDraw?.addEventListener("click", () => {
+        if (!RAW_ROWS.length) return;
+        openDraw();
+      });
+
+      btnCloseDraw?.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeDraw();
+      });
+
+      drawBackdrop?.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "drawBackdrop") closeDraw();
+      });
+
+      btnStartDraw?.addEventListener("click", async () => {
+        await runDraw();
+      });
+
+      btnAgainDraw?.addEventListener("click", async () => {
+        const slotName = document.getElementById("slotName");
+        const winnerBox = document.getElementById("winnerBox");
+        const btnStart = document.getElementById("btnStartDraw");
+        const btnAgain = document.getElementById("btnAgainDraw");
+        if (slotName) slotName.textContent = "—";
+        if (winnerBox) winnerBox.style.display = "none";
+        if (btnStart) { btnStart.style.display = "inline-flex"; btnStart.disabled = false; }
+        if (btnAgain) btnAgain.style.display = "none";
+        await runDraw();
+      });
+
+      btnClose?.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeHistory();
+      });
+
+      backdrop?.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "historyBackdrop") closeHistory();
+      });
+
+      
+      // Carregar base pela internet (Google Sheets publicado como CSV)
+      if (csvUrlInput){
+        const saved = localStorage.getItem("CAMPANHA_CSV_URL") || "";
+        if (saved) csvUrlInput.value = saved;
+      }
+
+      btnLoadNet?.addEventListener("click", async () => {
+        try{
+          const input = (csvUrlInput?.value || "").trim();
+          const url = normalizeGoogleSheetsUrl(input);
+          if (!url) { setStatus("Cole a URL CSV do Google Sheets.", true); return; }
+
+          setStatus("Baixando base da internet…", false);
+          const aoa = await loadFromCSV(url);
+
+          RAW_ROWS = extractRows(aoa);
+          ALL_DATES = buildDates(RAW_ROWS);
+
+          if (!RAW_ROWS.length || !ALL_DATES.length){
+            setStatus("Não encontrei linhas válidas (confira colunas A/C/D/H).", true);
+            return;
+          }
+
+          localStorage.setItem("CAMPANHA_CSV_URL", url);
+          const def = getDefaultDate(ALL_DATES);
+          fillDateSelect(ALL_DATES, def);
+          refreshForDate(def);
+          setStatus("Base atualizada da internet ✅", false);
+        }catch(err){
+          console.error(err);
+          setStatus("Erro ao atualizar da internet: " + (err?.message || err), true);
+        }
+      });
+
+      // Auto-carregar ao abrir (se já tiver URL salva)
+      try{
+        const saved = localStorage.getItem("CAMPANHA_CSV_URL") || "";
+        if (saved && !RAW_ROWS.length){
+          setTimeout(() => btnLoadNet?.click(), 200);
+        }
+      }catch(e){}
+
+document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") { closeHistory(); closeDraw(); }
+      });
+    });
+</script>
+
+  <!-- Histórico (modal) -->
+  <div class="modal-backdrop" id="historyBackdrop" style="display:none" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="historyTitle">📅 Resultados até hoje</div>
+          <div class="modal-sub" id="historySub">Carregando…</div>
+        </div>
+        <button class="btn modal-close" id="btnCloseHistory">Fechar</button>
+      </div>
+      <div class="modal-body">
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="historyTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Sorteio (modal) -->
+  <div class="modal-backdrop" id="drawBackdrop" style="display:none" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="drawTitle">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="drawTitle">🎲 Sorteio da Campanha</div>
+          <div class="modal-sub" id="drawSub">Chance proporcional aos cupons do dia selecionado.</div>
+        </div>
+        <button class="btn modal-close" id="btnCloseDraw">Fechar</button>
+      </div>
+      <div class="modal-body">
+        <div class="draw-wrap">
+          <canvas id="confettiCanvas" class="confetti" width="1200" height="700"></canvas>
+          <div class="slot">
+            <div class="slot-mask"></div>
+            <div class="slot-name" id="slotName">—</div>
+          </div>
+          <div class="winner" id="winnerBox" style="display:none">
+            <div class="winner-title">🏆 Vencedor</div>
+            <div class="winner-name" id="winnerName">—</div>
+            <div class="winner-sub" id="winnerSub">—</div>
+          </div>
+          <div class="draw-actions">
+            <button class="btn" id="btnStartDraw">Iniciar sorteio</button>
+            <button class="btn" id="btnAgainDraw" style="display:none">Sortear novamente</button>
+          </div>
+          <div class="draw-note">
+            * Regras: cada cupom = 1 chance. Quem tem mais cupons tem mais chance, mas todos entram.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
