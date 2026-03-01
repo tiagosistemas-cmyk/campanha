@@ -973,17 +973,10 @@
 
     function openHistory(){
       const backdrop = document.getElementById("historyBackdrop");
-      const btnDraw = document.getElementById("btnDraw");
-      const btnCloseDraw = document.getElementById("btnCloseDraw");
-      const drawBackdrop = document.getElementById("drawBackdrop");
-      const btnStartDraw = document.getElementById("btnStartDraw");
-      const btnAgainDraw = document.getElementById("btnAgainDraw");
-      const csvUrlInput = document.getElementById("csvUrl");
-      const btnLoadNet = document.getElementById("btnLoadNet");
       const tbody = document.getElementById("historyTbody");
       const sub = document.getElementById("historySub");
 
-      const hist = computeDailyTotals(RAW_ROWS);
+const hist = computeDailyTotals(RAW_ROWS);
       sub.textContent = `${hist.length} dias • Meta: R$ 20.000,00`;
       tbody.innerHTML = "";
 
@@ -1203,6 +1196,16 @@
       const btnHistory = document.getElementById("btnHistory");
       const btnClose = document.getElementById("btnCloseHistory");
       const backdrop = document.getElementById("historyBackdrop");
+
+      const btnDraw = document.getElementById("btnDraw");
+      const btnCloseDraw = document.getElementById("btnCloseDraw");
+      const drawBackdrop = document.getElementById("drawBackdrop");
+      const btnStartDraw = document.getElementById("btnStartDraw");
+      const btnAgainDraw = document.getElementById("btnAgainDraw");
+
+      const csvUrlInput = document.getElementById("csvUrl");
+      const btnLoadNet = document.getElementById("btnLoadNet");
+
 
       btnAnim?.addEventListener("click", () => {
         if (lastTeams.length) animateBars();
